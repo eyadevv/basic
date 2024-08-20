@@ -18,15 +18,15 @@ An innovative app that allows users to download videos using **Facebook Messenge
 
 📚 Technologies Used
 
-    Fastify: Fast and lightweight web framework for Node.js.
-    Axios: For interacting with Facebook Messenger's API.
-    ytdl-core: For downloading videos from YouTube.
+- Fastify: Fast and lightweight web framework for Node.js.
+- Axios: For interacting with Facebook Messenger's API.
+- ytdl-core: For downloading videos from YouTube.
 
 🚧 Future Improvements
 
-    🛠️ Add support for more video platforms beyond YouTube.
-    🛑 Better error handling for invalid video URLs.
-    🔄 Implement progress tracking for downloads.
+- 🛠️ Add support for more video platforms beyond YouTube.
+- 🛑 Better error handling for invalid video URLs.
+- 🔄 Implement progress tracking for downloads.
 
 📄 License
 
