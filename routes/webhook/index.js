@@ -1,7 +1,7 @@
 // Register formbody for parsing incoming requests
 
-import SendMsg from "../../lib/msg";
-module.exports = async function (fastify, opts) {
+import SendMsg from "../../lib/msg.js";
+export default async function (fastify, opts) {
   fastify.get("/", (request, reply) => {
     const VERIFY_TOKEN = "eyadevv";
     const mode = request.query["hub.mode"];
@@ -20,12 +20,12 @@ module.exports = async function (fastify, opts) {
     for (const event of messagingEvents) {
       const senderId = event.sender.id; // Sender's user ID
       const messageText = event?.message;
-      await sendTextMessage(senderId, `You MSG Is : ${messageText}`);
-      await sendTextMessage(senderId, `Thanks for testing the bot BYE`);
+      await SendMsg(senderId, `You MSG Is : ${messageText}`);
+      await SendMsg(senderId, `Thanks for testing the bot BYE`);
 
       console.log(messageText);
     }
 
     reply.send("EVENT_RECEIVED");
   });
-};
+}
