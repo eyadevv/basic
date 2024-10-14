@@ -6,14 +6,7 @@ export default async function getVideoInfo(url: string, agent: any) {
   ) // Ensure it's a video format
 
   const format = bestQualityFormat.filter(
-    (value) =>
-      (value.qualityLabel === '1080p' ||
-        value.qualityLabel === '1080p60' ||
-        value.qualityLabel === '1080p60 HDR' ||
-        value.qualityLabel === '720p' ||
-        value.qualityLabel === '720p60' ||
-        value.qualityLabel === '720p60 HDR') &&
-      value.hasAudio
+    (value) => value.qualityLabel === '360p' || value.qualityLabel === '360p60 HDR'
   )
   return { format, videoInfo }
 }

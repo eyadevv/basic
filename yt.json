@@ -14,7 +14,7 @@
     },
     {
         "domain": ".youtube.com",
-        "expirationDate": 1763382099.481439,
+        "expirationDate": 1763495059.314965,
         "hostOnly": false,
         "httpOnly": false,
         "name": "PREF",
@@ -144,7 +144,7 @@
     },
     {
         "domain": ".youtube.com",
-        "expirationDate": 1760357799.266231,
+        "expirationDate": 1760472865.240411,
         "hostOnly": false,
         "httpOnly": true,
         "name": "__Secure-1PSIDTS",
@@ -153,11 +153,11 @@
         "secure": true,
         "session": false,
         "storeId": "0",
-        "value": "sidts-CjIBQlrA-GrDhI2PyclWr28S8HIfa3qfH6P983hmDb2_1NiKhjDAa94JVj980FgAq9NPFRAA"
+        "value": "sidts-CjIBQlrA-POtblRGZRhf1Yd7yvZ7QlYCNkKqK8DIqiIN6WsP28Vigkh_lVIb-52nV1B4qhAA"
     },
     {
         "domain": ".youtube.com",
-        "expirationDate": 1760357799.266485,
+        "expirationDate": 1760472865.240677,
         "hostOnly": false,
         "httpOnly": true,
         "name": "__Secure-3PSIDTS",
@@ -166,11 +166,11 @@
         "secure": true,
         "session": false,
         "storeId": "0",
-        "value": "sidts-CjIBQlrA-GrDhI2PyclWr28S8HIfa3qfH6P983hmDb2_1NiKhjDAa94JVj980FgAq9NPFRAA"
+        "value": "sidts-CjIBQlrA-POtblRGZRhf1Yd7yvZ7QlYCNkKqK8DIqiIN6WsP28Vigkh_lVIb-52nV1B4qhAA"
     },
     {
         "domain": ".youtube.com",
-        "expirationDate": 1760358096.861189,
+        "expirationDate": 1760473025.440156,
         "hostOnly": false,
         "httpOnly": false,
         "name": "SIDCC",
@@ -179,11 +179,11 @@
         "secure": false,
         "session": false,
         "storeId": "0",
-        "value": "AKEyXzUk3w5NVmqi3nUYY8H2BiQzdeJkykZ4XMRQb2pVTC-2iPmXpn7UVbx9lQ44eFVCahq1"
+        "value": "AKEyXzUo9W1IhrVog_vZ6CzqsXlZlUn2XtYkVgjCKBXB7spwZOHldsnlxL7MjL6yeQVKwBLvqw"
     },
     {
         "domain": ".youtube.com",
-        "expirationDate": 1760358096.861389,
+        "expirationDate": 1760473025.440339,
         "hostOnly": false,
         "httpOnly": true,
         "name": "__Secure-1PSIDCC",
@@ -192,11 +192,11 @@
         "secure": true,
         "session": false,
         "storeId": "0",
-        "value": "AKEyXzUqRIJrxElROAPF2u4GEyrhE7lX804Qlh0KOEPt8zOXJUZVvG2kuQgyQP23hJKOnfo8AA"
+        "value": "AKEyXzVPODOE45OaYA967sjlnZacTEhrVtlepu834aHeaIq5zyAJqY6uKuPi1ntuG4gqth9-RHE"
     },
     {
         "domain": ".youtube.com",
-        "expirationDate": 1760358096.861461,
+        "expirationDate": 1760473025.440479,
         "hostOnly": false,
         "httpOnly": true,
         "name": "__Secure-3PSIDCC",
@@ -205,6 +205,6 @@
         "secure": true,
         "session": false,
         "storeId": "0",
-        "value": "AKEyXzWaS6b7pHcMliQhUEhz5QVl1tH6Y7eLKle_mm3PX70EHdvQJcgRrw4cuwrzmDIB2WjNgA"
+        "value": "AKEyXzUuCn7jt5-G88POXM9b7DrxZHGUzw5Pwvht1yy_ln1CvM316ex_tOd8MX4KgE2yp3FBtQ"
     }
 ]
