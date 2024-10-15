@@ -9,8 +9,7 @@ import embed from '../lib/embed.js'
 import clipper from '../lib/split.js'
 import FbmSend from 'fbm-send'
 const fbmSend = new FbmSend({
-  accessToken:
-    'EAAHR3q6ZCxw4BO5IG26vfdJ05UtttoolVru3alQDdUNdcaqJG1SVBdOm9TAOSU1uqZCDZC6HvpKi9JnjZCZBpdPZA0L6DPOZCXxmdViHnmjSOb4pWUcNKStvUqVbZB44U9jYi29Hw6FGVDx2z9DcQaJ3ZC2qD51LaluWkeUkuuJ9gb1Cys6J2NdbrJx7wqYUQlsRM',
+  accessToken: process.env.PAGE_ACCESS_TOKEN,
   version: '21.0',
 })
 const p = import.meta.dirname.split('/')
@@ -20,7 +19,6 @@ const path = p.join('/')
 // Retry helper for redundancy
 
 // Upload an image to a remote server (e.g., Facebook)
-
 function delay(seconds: number) {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000))
 }
