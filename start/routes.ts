@@ -2,7 +2,7 @@ import router from '@adonisjs/core/services/router'
 import axios from 'axios'
 import ytdl from '@distube/ytdl-core'
 import downloadVideo from '../lib/download.js'
-import getVideoInfo from '../lib/info.js'
+import getVideoInfo from '../lib/format.js'
 import fs from 'node:fs'
 import { readdir } from 'node:fs/promises'
 import embed from '../lib/embed.js'
@@ -13,29 +13,15 @@ p.pop()
 const path = p.join('/')
 
 // Retry helper for redundancy
-async function retryOperation(
-  operation: () => Promise<any>,
-  retries: number = 3,
-  delay: number = 1000
-) {
-  let attempts = 0
-  while (attempts < retries) {
-    try {
-      return await operation()
-    } catch (error) {
-      attempts++
-      console.error(`Attempt ${attempts} failed: ${error.message}`)
-      if (attempts >= retries) throw error
-      await new Promise((resolve) => setTimeout(resolve, delay)) // Wait before retrying
-    }
-  }
-}
 
 // Upload an image to a remote server (e.g., Facebook)
 const uploadImage = async (coverpath: string) => {
   // Upload logic here (currently commented out)
 }
-
+function delay(seconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, seconds * 1000))
+}
+let isDownloading = false
 // Send a text message (e.g., via Messenger)
 const sendText = async (senderPsid: string, text: string) => {
   const requestBody = {
@@ -45,12 +31,11 @@ const sendText = async (senderPsid: string, text: string) => {
   }
 
   try {
-    await retryOperation(() =>
-      axios.post(
-        `https://graph.facebook.com/v15.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`,
-        requestBody
-      )
+    await axios.post(
+      `https://graph.facebook.com/v15.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`,
+      requestBody
     )
+
     console.log('Message sent successfully')
   } catch (error) {
     console.error('Unable to send message:', error.response ? error.response.data : error.message)
@@ -66,53 +51,58 @@ router.post('/webhook', async ({ request, response }) => {
   const msg: string = event.message.text
 
   if (event.message && msg && msg.startsWith('https://')) {
-    try {
-      const cookies = fs.readFileSync(`${path}/yt.json`, 'utf-8')
-      const agent = ytdl.createAgent(JSON.parse(cookies), {
-        connectTimeout: 999999999,
-        bodyTimeout: 999999999,
-        headersTimeout: 999999999,
-        keepAliveTimeout: 999999999,
-      })
+    console.log('MSG')
+    if (isDownloading) {
+      await sendText(senderPsid, 'There is a nother download being processed')
+    } else {
+      // console.log(event)
+      try {
+        isDownloading = true
 
-      // Step 1: Get video info
-      const { format, videoInfo } = await retryOperation(() => getVideoInfo(msg, agent))
+        const cookies = fs.readFileSync(`${path}/yt.json`, 'utf-8')
+        const agent = ytdl.createAgent(JSON.parse(cookies))
 
-      // Step 2: Download video
-      const videoPath = `${path}/videos/${videoInfo.videoDetails.title}.${format[0].container}`
-      await retryOperation(() => downloadVideo(msg, videoPath, format[0], agent))
+        // Step 1: Get video info
+        const { videoFormats, videoInfo } = await getVideoInfo(msg, agent)
+        await delay(2)
+        // Step 2: Download video
+        const bestQuality = ytdl.chooseFormat(videoFormats, {
+          quality: 'highest',
+        })
+        const videoPath = `${path}/videos/${videoInfo.videoDetails.title}.${bestQuality.container}`
+        await downloadVideo(msg, videoPath, bestQuality, agent, videoInfo)
+        await delay(2)
 
-      console.log('Video downloaded, starting clipper process...')
+        // // Step 3: Split video into chunks
+        console.log(bestQuality.container)
+        await clipper(`${path}/videos/${videoInfo.videoDetails.title}.${bestQuality.container}`)
 
-      // Step 3: Split video into chunks
-      await retryOperation(() => clipper(`${path}/videos/${videoInfo.videoDetails.title}`))
+        // console.log('Video chunks created.')
 
-      console.log('Video chunks created.')
+        // // Step 4: Read chunks, process them block-by-block (optional upload example)
+        const chunks = await readdir(`${path}/videos/${videoInfo.videoDetails.title}`)
+        for (const chunk of chunks) {
+          const download = await embed(
+            `${path}/videos/${videoInfo.videoDetails.title}/${chunk}`,
+            `${path}/files/cover.png`
+          )
+          console.log(download)
+          // await uploadImage(download)
+        }
 
-      // Step 4: Read chunks, process them block-by-block (optional upload example)
-      const chunks = await readdir(`${path}/videos/${videoInfo.videoDetails.title}`).then(
-        (res: any) =>
-          res.sort((a: any, b: any) => {
-            const numberA = Number.parseInt(a.match(/-(\d+)\.mkv$/)[1], 10)
-            const numberB = Number.parseInt(b.match(/-(\d+)\.mkv$/)[1], 10)
-            return numberA - numberB
-          })
-      )
+        // Send success message
+        await sendText(senderPsid, 'Your video has been processed and uploaded!')
+        isDownloading = false
+      } catch (error) {
+        console.error('Error occurred during the workflow:', error)
+        await sendText(senderPsid, `An error occurred: ${error.message}`)
+        isDownloading = false
 
-      for (const chunk of chunks) {
-        const download = await retryOperation(() =>
-          embed(`${path}/videos/${videoInfo.videoDetails.title}/${chunk}`)
-        )
-        await retryOperation(() => uploadImage(download))
+        // Log error but keep the server running
       }
-
-      // Send success message
-      await sendText(senderPsid, 'Your video has been processed and uploaded!')
-    } catch (error) {
-      console.error('Error occurred during the workflow:', error)
-      await sendText(senderPsid, `An error occurred: ${error.message}`)
-      // Log error but keep the server running
     }
+  } else {
+    await sendText(senderPsid, 'Action Not allowed please enter a valid url')
   }
 
   return response.status(200).send('EVENT_RECEIVED')

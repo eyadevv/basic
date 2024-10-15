@@ -1,69 +1,73 @@
-import ytdl from '@distube/ytdl-core'
-import fs from 'node:fs'
+import ytdl, { videoFormat, videoInfo } from '@distube/ytdl-core'
+import fs, { rmSync } from 'node:fs'
 import cliProgress from 'cli-progress'
+import { rm } from 'node:fs/promises'
 
 // Function to download a video at the specified quality and return a Promise
 export default async function downloadVideo(
   url: string,
   outputPath: string,
   quality: any,
-  agent: any
+  agent: any,
+  info: videoInfo
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
-      // Get the video info to track the content size for the progress bar
-      ytdl
-        .getInfo(url, { agent })
-        .then((info) => {
-          const videoFormat = ytdl.chooseFormat(info.formats, { quality: 'highestvideo' })
-          const totalSize = Number.parseInt(videoFormat.contentLength || '0', 10)
+      // Check if the video already exists
+      if (fs.existsSync(outputPath)) {
+        console.log('File already exists. Skipping download.')
+        return resolve()
+      }
 
-          // Initialize the progress bar
-          const progressBar = new cliProgress.SingleBar(
-            {
-              format: 'Downloading [{bar}] {percentage}% | {value}/{total} MB',
-            },
-            cliProgress.Presets.shades_classic
-          )
+      // Get the video format with the highest quality
 
-          let downloadedSize = 0
-          progressBar.start(totalSize / (1024 * 1024), 0) // Convert bytes to MB for the progress bar
+      // Ensure content length is available for progress tracking
+      const totalSize = Number(quality.contentLength)
+      // Initialize the progress bar
+      const progressBar = new cliProgress.SingleBar(
+        {
+          format: 'Downloading [{bar}] {percentage}% | {value}/{total} MB',
+        },
+        cliProgress.Presets.shades_classic
+      )
 
-          const videoStream = ytdl(url, { agent })
-          const fileStream = fs.createWriteStream(outputPath)
+      let downloadedSize = 0
+      const totalSizeInMB = totalSize / (1024 * 1024) // Convert bytes to MB
+      progressBar.start(totalSizeInMB, 0)
 
-          // Listen for progress events to update the progress bar
-          videoStream.on('data', (chunk) => {
-            downloadedSize += chunk.length
-            progressBar.update(downloadedSize / (1024 * 1024)) // Update progress bar with chunk size in MB
-          })
+      // Start the download stream
+      const videoStream = ytdl(url, { agent, format: quality })
+      const fileStream = fs.createWriteStream(outputPath)
 
-          // Pipe the video stream to the file system
-          videoStream.pipe(fileStream)
+      // Listen for progress events to update the progress bar
+      videoStream.on('data', (chunk) => {
+        downloadedSize += chunk.length
+        progressBar.update(downloadedSize / (1024 * 1024)) // Update progress bar with chunk size in MB
+      })
 
-          // Resolve the Promise when the download is complete
-          fileStream.on('finish', () => {
-            progressBar.stop()
-            console.log('Download complete!')
-            resolve()
-          })
+      // Pipe the video stream to the file system
+      videoStream.pipe(fileStream)
 
-          // Handle stream errors
-          videoStream.on('error', (error: any) => {
-            progressBar.stop()
-            console.error('Error during download:', error)
-            reject(error)
-          })
+      // Resolve the Promise when the download is complete
+      fileStream.on('finish', () => {
+        progressBar.stop()
+        console.log('Download complete!')
+        resolve()
+      })
 
-          fileStream.on('error', (error: any) => {
-            progressBar.stop()
-            console.error('Error writing file:', error)
-            reject(error)
-          })
-        })
-        .catch((error) => {
-          reject(`Error fetching video info: ${error.message}`)
-        })
+      // Handle stream errors
+      videoStream.on('error', (error: any) => {
+        progressBar.stop()
+        console.error('Error during download:', error)
+        rmSync(outputPath, { force: true })
+        reject(error)
+      })
+
+      fileStream.on('error', (error: any) => {
+        progressBar.stop()
+        console.error('Error writing file:', error)
+        reject(error)
+      })
     } catch (error) {
       reject(`Error in download function: ${error.message}`)
     }

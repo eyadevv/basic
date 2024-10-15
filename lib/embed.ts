@@ -3,7 +3,7 @@ function delay(seconds: number) {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000))
 }
 
-export default async function embed(pathToVideo: string) {
+export default async function embed(pathToVideo: string, coverPath: string) {
   const arr = pathToVideo.split('/')
   const filename = arr[arr.length - 1]
   const dir = `${filename.slice(0, filename.lastIndexOf('.'))}`
@@ -14,7 +14,7 @@ export default async function embed(pathToVideo: string) {
     useChrome: true,
     launchOptions: {
       viewport: null,
-      headless: true, // To see the process
+      headless: false, // To see the process
       timeout: 30000,
       acceptDownloads: true,
       downloadsPath: `${output}`, // Disable the timeout for long operations
@@ -27,7 +27,7 @@ export default async function embed(pathToVideo: string) {
 
   // Set the file directly to avoid the native file picker
   const fileInput = page.locator('input[type="file"]')
-  await fileInput.setInputFiles(`${import.meta.dirname}/files/cover.png`) // Set file without clicking the button
+  await fileInput.setInputFiles(coverPath) // Set file without clicking the button
   await page.waitForURL('https://georgeom.net/StegOnline/image')
   await page.waitForLoadState('networkidle')
 

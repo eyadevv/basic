@@ -52,7 +52,7 @@ while [[ $CUR_DURATION -lt $DURATION ]]; do
     # Encode next part
     echo "Processing part $i..."
     echo ffmpeg -i "$FILE" -ss "$CUR_DURATION" -fs "$SIZELIMIT" $FFMPEG_ARGS "$NEXTFILENAME"
-    ffmpeg -ss "$CUR_DURATION" -i "$FILE" -fs "$SIZELIMIT" $FFMPEG_ARGS "$NEXTFILENAME" -y
+    ffmpeg -ss "$CUR_DURATION" -i "$FILE" -fs "$SIZELIMIT" $FFMPEG_ARGS "$NEXTFILENAME" -n
 
     # Duration of the new part
     NEW_DURATION=$(ffprobe -i "$NEXTFILENAME" -show_entries format=duration -v quiet -of default=noprint_wrappers=1:nokey=1 | cut -d. -f1)
@@ -68,4 +68,4 @@ while [[ $CUR_DURATION -lt $DURATION ]]; do
     NEXTFILENAME="$OUTPUT_FOLDER/$BASENAME-$i.$EXTENSION"
 done
 
-echo "Video splitting complete. Files saved in $OUTPUT_FOLDER"
+echo "done"
