@@ -44,6 +44,12 @@ importers:
       env:
         specifier: link:@adonisjs/core/env
         version: link:@adonisjs/core/env
+      fbm-send:
+        specifier: ^2.0.5
+        version: 2.0.5
+      form-data:
+        specifier: ^4.0.1
+        version: 4.0.1
       playwright:
         specifier: ^1.48.0
         version: 1.48.0
@@ -656,6 +662,14 @@ packages:
 
   '@poppinss/validator-lite@1.0.3':
     resolution: {integrity: sha512-u4dmT7PDHwNtxY3q1jHVp/u+hMEEcBlkzd37QwwM4tVt/0mLlEDttSfPQ+TT7sqPG4VEtWKwVSlMInwPUYyJpA==}
+
+  '@risan/is-empty@1.0.5':
+    resolution: {integrity: sha512-u/4h876jBamOSVQj/8tX60hfgBzORAg8ZTnSUV8KNiudDtpXfye4JafAtkWYL4GprJjKXSHZqVuxtUWxopPyHQ==}
+    engines: {node: '>=8.0.0'}
+
+  '@risan/is-plain-obj@1.0.7':
+    resolution: {integrity: sha512-yEqFwc/Sfm57+SYhDovJjH1JOthBaoTXoaP+68D5YMhQVBLb/Etq5aQNE/NUctIJz5S2B4IxkWDK7GHjH6SYgA==}
+    engines: {node: '>=8.0.0'}
 
   '@sapphire/async-queue@1.5.3':
     resolution: {integrity: sha512-x7zadcfJGxFka1Q3f8gCts1F0xMwCKbZweM85xECGI0hBTeIZJGGCrHgLggihBoprlQ/hBmDR5LKfIPqnmHM3w==}
@@ -1808,6 +1822,10 @@ packages:
 
   fastq@1.17.1:
     resolution: {integrity: sha512-sRVD3lWVIXWg6By68ZN7vho9a1pQcN/WBFaAAsDDFzlJjvoGx0P8z7V1t72grFJfJhu3YPZBuu25f7Kaw2jN1w==}
+
+  fbm-send@2.0.5:
+    resolution: {integrity: sha512-J7YJudLgK7hTCAmboJoO/sL3c+x/pVT8zYo79azsR5KLyEZcyzxWWzmke8v9J+2GkBN8ClXL8Rwl6nzQ7H/P9A==}
+    engines: {node: '>=8.0.0'}
 
   figlet@1.8.0:
     resolution: {integrity: sha512-chzvGjd+Sp7KUvPHZv6EXV5Ir3Q7kYNpCr4aHrRW79qFtTefmQZNny+W1pW9kf5zeE6dikku2W50W/wAH2xWgw==}
@@ -3271,6 +3289,10 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  send-request@1.0.5:
+    resolution: {integrity: sha512-FzV1+9LAx4oVkixbzNbLlxMqjBzq2IroSWj0EsX7TLaSTlGLimYy9DfuNQTlXlqJ+lTz+6BJrNlFRjQWw7rHgA==}
+    engines: {node: '>=10.0.0'}
+
   serialize-error@11.0.3:
     resolution: {integrity: sha512-2G2y++21dhj2R7iHAdd0FIzjGwuKZld+7Pl/bTU6YIkrC2ZMbVUjm+luj6A6V34Rv9XfKJDKpTWu9W4Gse1D9g==}
     engines: {node: '>=14.16'}
@@ -3397,6 +3419,10 @@ packages:
   statuses@2.0.1:
     resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
     engines: {node: '>= 0.8'}
+
+  str-to-stream@1.0.2:
+    resolution: {integrity: sha512-FLmhvN5zrjFI1rUpwx5CX72phrWWrCxVWI7WDyYW8MsyqKP8krrX80a2zCqgagUFPsjE7OgGTIef+DHZQQhS8Q==}
+    engines: {node: '>=8.0.0'}
 
   stream-chain@2.2.5:
     resolution: {integrity: sha512-1TJmBx6aSWqZ4tx7aTpBDXK0/e2hhcNSTV8+CbFJtDjbb+I1mZ8lHit0Grw9GRT+6JbIrrDd8esncgBi8aBXGA==}
@@ -4711,6 +4737,12 @@ snapshots:
     dependencies:
       validator: 13.12.0
 
+  '@risan/is-empty@1.0.5':
+    dependencies:
+      '@risan/is-plain-obj': 1.0.7
+
+  '@risan/is-plain-obj@1.0.7': {}
+
   '@sapphire/async-queue@1.5.3': {}
 
   '@sapphire/shapeshift@3.9.7':
@@ -5930,6 +5962,13 @@ snapshots:
   fastq@1.17.1:
     dependencies:
       reusify: 1.0.4
+
+  fbm-send@2.0.5:
+    dependencies:
+      '@risan/is-plain-obj': 1.0.7
+      form-data: 2.5.2
+      lodash: 4.17.21
+      send-request: 1.0.5
 
   figlet@1.8.0: {}
 
@@ -7388,6 +7427,12 @@ snapshots:
 
   semver@7.6.3: {}
 
+  send-request@1.0.5:
+    dependencies:
+      '@risan/is-empty': 1.0.5
+      '@risan/is-plain-obj': 1.0.7
+      str-to-stream: 1.0.2
+
   serialize-error@11.0.3:
     dependencies:
       type-fest: 2.19.0
@@ -7523,6 +7568,8 @@ snapshots:
       get-source: 2.0.12
 
   statuses@2.0.1: {}
+
+  str-to-stream@1.0.2: {}
 
   stream-chain@2.2.5: {}
 

@@ -7,7 +7,12 @@ import fs from 'node:fs'
 import { readdir } from 'node:fs/promises'
 import embed from '../lib/embed.js'
 import clipper from '../lib/split.js'
-
+import FbmSend from 'fbm-send'
+const fbmSend = new FbmSend({
+  accessToken:
+    'EAAHR3q6ZCxw4BO5IG26vfdJ05UtttoolVru3alQDdUNdcaqJG1SVBdOm9TAOSU1uqZCDZC6HvpKi9JnjZCZBpdPZA0L6DPOZCXxmdViHnmjSOb4pWUcNKStvUqVbZB44U9jYi29Hw6FGVDx2z9DcQaJ3ZC2qD51LaluWkeUkuuJ9gb1Cys6J2NdbrJx7wqYUQlsRM',
+  version: '21.0',
+})
 const p = import.meta.dirname.split('/')
 p.pop()
 const path = p.join('/')
@@ -15,9 +20,7 @@ const path = p.join('/')
 // Retry helper for redundancy
 
 // Upload an image to a remote server (e.g., Facebook)
-const uploadImage = async (coverpath: string) => {
-  // Upload logic here (currently commented out)
-}
+
 function delay(seconds: number) {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000))
 }
@@ -41,6 +44,27 @@ const sendText = async (senderPsid: string, text: string) => {
     console.error('Unable to send message:', error.response ? error.response.data : error.message)
   }
 }
+const sendImg = async (filePath: string) => {
+  let retries = 3
+  try {
+    const res = await fbmSend.image(filePath, {
+      to: '6839300156166221',
+      messagingType: 'RESPONSE',
+      isReusable: false,
+    })
+
+    return res
+  } catch (error) {
+    if (retries > 0) {
+      console.log('Error when sending embeded file ' + retries)
+      await delay(2)
+      retries = retries - 1
+      await sendImg(filePath)
+    } else {
+      throw new Error('Failed to Send Embeded Data file please debug')
+    }
+  }
+}
 
 router.post('/webhook', async ({ request, response }) => {
   const body = request.body()
@@ -51,6 +75,7 @@ router.post('/webhook', async ({ request, response }) => {
   const msg: string = event.message.text
 
   if (event.message && msg && msg.startsWith('https://')) {
+    console.log(senderPsid)
     console.log('MSG')
     if (isDownloading) {
       await sendText(senderPsid, 'There is a nother download being processed')
@@ -70,7 +95,7 @@ router.post('/webhook', async ({ request, response }) => {
           quality: 'highest',
         })
         const videoPath = `${path}/videos/${videoInfo.videoDetails.title}.${bestQuality.container}`
-        await downloadVideo(msg, videoPath, bestQuality, agent, videoInfo)
+        await downloadVideo(msg, videoPath, bestQuality, agent)
         await delay(2)
 
         // // Step 3: Split video into chunks
@@ -81,13 +106,31 @@ router.post('/webhook', async ({ request, response }) => {
 
         // // Step 4: Read chunks, process them block-by-block (optional upload example)
         const chunks = await readdir(`${path}/videos/${videoInfo.videoDetails.title}`)
+        const embederFunc = async (chunk: string) => {
+          let retries = 3
+          try {
+            const download = await embed(
+              `${path}/videos/${videoInfo.videoDetails.title}/${chunk}`,
+              `${path}/videos/${videoInfo.videoDetails.title}`,
+              `${path}/files/cover.png`
+            )
+            return download
+          } catch (error) {
+            if (retries > 0) {
+              console.log('error on embed function retries left :' + retries)
+              await delay(2)
+              retries = retries - 1
+              await embederFunc(chunk)
+            } else {
+              throw new Error('Failed to Embed file please debug')
+            }
+          }
+        }
         for (const chunk of chunks) {
-          const download = await embed(
-            `${path}/videos/${videoInfo.videoDetails.title}/${chunk}`,
-            `${path}/files/cover.png`
-          )
-          console.log(download)
-          // await uploadImage(download)
+          if (!chunk.includes('.crdownload') && !chunk.endsWith('.png') && chunk.includes('.')) {
+            const embedPath = await embederFunc(chunk)
+            embedPath ? await sendImg(embedPath) : null
+          }
         }
 
         // Send success message

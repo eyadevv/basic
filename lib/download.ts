@@ -8,8 +8,7 @@ export default async function downloadVideo(
   url: string,
   outputPath: string,
   quality: any,
-  agent: any,
-  info: videoInfo
+  agent: any
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
