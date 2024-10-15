@@ -4,7 +4,7 @@ import ytdl from '@distube/ytdl-core'
 import downloadVideo from '../lib/download.js'
 import getVideoInfo from '../lib/format.js'
 import fs from 'node:fs'
-import { readdir } from 'node:fs/promises'
+import { readdir, rm } from 'node:fs/promises'
 import embed from '../lib/embed.js'
 import clipper from '../lib/split.js'
 import FbmSend from 'fbm-send'
@@ -135,6 +135,12 @@ router.post('/webhook', async ({ request, response }) => {
 
         // Send success message
         await sendText(senderPsid, 'Your video has been processed and uploaded!')
+        await delay(10)
+        await rm(`${path}/videos/${videoInfo.videoDetails.title}`, {
+          force: true,
+          recursive: true,
+        })
+        await sendText(senderPsid, 'Server has Cleared Files from Disk !')
         isDownloading = false
       } catch (error) {
         console.error('Error occurred during the workflow:', error)
