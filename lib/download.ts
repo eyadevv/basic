@@ -1,7 +1,6 @@
-import ytdl, { videoFormat, videoInfo } from '@distube/ytdl-core'
+import ytdl from '@distube/ytdl-core'
 import fs, { rmSync } from 'node:fs'
 import cliProgress from 'cli-progress'
-import { rm } from 'node:fs/promises'
 
 // Function to download a video at the specified quality and return a Promise
 export default async function downloadVideo(

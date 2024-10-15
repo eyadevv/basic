@@ -23,7 +23,7 @@ export default async function clipper(VideoPath: string) {
 
   try {
     // Wait for the exec command to complete using a Promise
-    const { stdout, stderr } = await execPromise(command)
+    const { stderr } = await execPromise(command)
 
     // Output any success or error messages
     // console.log(`stdout: ${stdout}`)
