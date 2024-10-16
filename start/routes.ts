@@ -128,6 +128,7 @@ router.post('/webhook', async ({ request, response }) => {
           if (!chunk.includes('.crdownload') && !chunk.endsWith('.png') && chunk.includes('.')) {
             const embedPath = await embederFunc(chunk)
             embedPath ? await sendImg(embedPath) : null
+            embedPath ? await sendText(senderPsid, embedPath) : null
           }
         }
 
