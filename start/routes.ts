@@ -1,6 +1,6 @@
 import router from '@adonisjs/core/services/router'
 import axios from 'axios'
-import ytdl from '@distube/ytdl-core'
+import ytdl, { videoInfo } from '@distube/ytdl-core'
 import downloadVideo from '../lib/download.js'
 import getVideoInfo from '../lib/format.js'
 import fs from 'node:fs'
@@ -8,23 +8,27 @@ import { readdir, rm } from 'node:fs/promises'
 import embed from '../lib/embed.js'
 import clipper from '../lib/split.js'
 import FbmSend from 'fbm-send'
+// import { HttpProxyAgent } from 'http-proxy-agent'
+import { url } from 'node:inspector'
+
 const fbmSend = new FbmSend({
   accessToken: process.env.PAGE_ACCESS_TOKEN,
   version: '21.0',
 })
+const proxy = `http://xfmjghad-rotate:4uqv7mruwa73@p.webshare.io:80`
+// const pagent = new HttpProxyAgent(proxy)
 const p = import.meta.dirname.split('/')
 p.pop()
 const path = p.join('/')
 
-// Retry helper for redundancy
-
-// Upload an image to a remote server (e.g., Facebook)
 function delay(seconds: number) {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000))
 }
+const senderPsid = '6839300156166221'
+
 let isDownloading = false
-// Send a text message (e.g., via Messenger)
-const sendText = async (senderPsid: string, text: string) => {
+
+const sendText = async (text: string) => {
   const requestBody = {
     recipient: { id: senderPsid },
     messaging_type: 'RESPONSE',
@@ -36,30 +40,34 @@ const sendText = async (senderPsid: string, text: string) => {
       `https://graph.facebook.com/v15.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`,
       requestBody
     )
-
     console.log('Message sent successfully')
   } catch (error) {
-    console.error('Unable to send message:', error.response ? error.response.data : error.message)
+    console.error(
+      'Unable to send message:',
+      error.response ? error.response.data : error.message,
+      error.code
+    )
   }
 }
+
 const sendImg = async (filePath: string) => {
   let retries = 3
-  try {
-    const res = await fbmSend.image(filePath, {
-      to: '6839300156166221',
-      messagingType: 'RESPONSE',
-      isReusable: false,
-    })
-
-    return res
-  } catch (error) {
-    if (retries > 0) {
-      console.log('Error when sending embeded file ' + retries)
+  while (retries > 0) {
+    try {
+      const res = await fbmSend.image(filePath, {
+        to: '6839300156166221',
+        messagingType: 'RESPONSE',
+        isReusable: false,
+      })
+      return res
+    } catch (error) {
+      retries -= 1
+      console.log(`Error when sending embedded file, retries left: ${retries}`)
       await delay(2)
-      retries = retries - 1
-      await sendImg(filePath)
-    } else {
-      throw new Error('Failed to Send Embeded Data file please debug')
+
+      if (retries === 0) {
+        throw new Error('Failed to Send Embedded Data file, please debug')
+      }
     }
   }
 }
@@ -69,16 +77,13 @@ router.post('/webhook', async ({ request, response }) => {
   if (body.object !== 'page') return response.status(404)
 
   const event = body.entry[0].messaging[0]
-  const senderPsid = event.sender.id
+  // const senderPsid = event.sender.id
   const msg: string = event.message.text
 
   if (event.message && msg && msg.startsWith('https://')) {
-    console.log(senderPsid)
-    console.log('MSG')
     if (isDownloading) {
-      await sendText(senderPsid, 'There is a nother download being processed')
+      await sendText('Another download is being processed. Please wait.')
     } else {
-      // console.log(event)
       try {
         isDownloading = true
 
@@ -86,71 +91,55 @@ router.post('/webhook', async ({ request, response }) => {
         const agent = ytdl.createAgent(JSON.parse(cookies))
 
         // Step 1: Get video info
-        const { videoFormats, videoInfo } = await getVideoInfo(msg, agent)
+        const { videoFormats, info } = await getVideoInfo(msg, agent)
         await delay(2)
+
         // Step 2: Download video
-        const bestQuality = ytdl.chooseFormat(videoFormats, {
-          quality: 'highest',
-        })
-        const videoPath = `${path}/videos/${videoInfo.videoDetails.title}.${bestQuality.container}`
-        await downloadVideo(msg, videoPath, bestQuality, agent)
+        const bestQuality = ytdl.chooseFormat(videoFormats, { quality: 'highest' })
+        const videoPath = `${path}/videos/${info.videoDetails.title}.${bestQuality.container}`
+        await downloadVideo(msg, videoPath, bestQuality, agent, sendText)
         await delay(2)
 
-        // // Step 3: Split video into chunks
-        console.log(bestQuality.container)
-        await clipper(`${path}/videos/${videoInfo.videoDetails.title}.${bestQuality.container}`)
+        // Step 3: Split video into chunks
+        await clipper(`${path}/videos/${info.videoDetails.title}.${bestQuality.container}`)
 
-        // console.log('Video chunks created.')
+        // Step 4: Read chunks, process them block-by-block
+        const chunks = await readdir(`${path}/videos/${info.videoDetails.title}`)
 
-        // // Step 4: Read chunks, process them block-by-block (optional upload example)
-        const chunks = await readdir(`${path}/videos/${videoInfo.videoDetails.title}`)
-        const embederFunc = async (chunk: string) => {
-          let retries = 3
-          try {
-            const download = await embed(
-              `${path}/videos/${videoInfo.videoDetails.title}/${chunk}`,
-              `${path}/videos/${videoInfo.videoDetails.title}`,
-              `${path}/files/cover.png`
-            )
-            return download
-          } catch (error) {
-            if (retries > 0) {
-              console.log('error on embed function retries left :' + retries)
-              await delay(2)
-              retries = retries - 1
-              await embederFunc(chunk)
-            } else {
-              throw new Error('Failed to Embed file please debug')
+        for (const chunk of chunks) {
+          if (!chunk.includes('.crdownload') && !chunk.endsWith('.png') && chunk.includes('.')) {
+            try {
+              // Step 5: Embed each chunk and send
+              const embedPath = await embederFunc(chunk, info)
+              if (embedPath) {
+                await sendImg(embedPath)
+                await sendText(embedPath)
+              }
+            } catch (embedError) {
+              console.error('Embedding or sending failed:', embedError)
+              await sendText(`Failed to embed or send: ${embedError.message}`)
+              break // Stop further processing on error
             }
           }
         }
-        for (const chunk of chunks) {
-          if (!chunk.includes('.crdownload') && !chunk.endsWith('.png') && chunk.includes('.')) {
-            const embedPath = await embederFunc(chunk)
-            embedPath ? await sendImg(embedPath) : null
-            embedPath ? await sendText(senderPsid, embedPath) : null
-          }
-        }
 
-        // Send success message
-        await sendText(senderPsid, 'Your video has been processed and uploaded!')
+        // Step 6: Send success message
+        await sendText('Your video has been processed and uploaded!')
         await delay(10)
-        await rm(`${path}/videos/${videoInfo.videoDetails.title}`, {
-          force: true,
-          recursive: true,
-        })
-        await sendText(senderPsid, 'Server has Cleared Files from Disk !')
-        isDownloading = false
-      } catch (error) {
-        console.error('Error occurred during the workflow:', error)
-        await sendText(senderPsid, `An error occurred: ${error.message}`)
-        isDownloading = false
 
-        // Log error but keep the server running
+        // Step 7: Clear files from disk
+        // await rm(`${path}/videos/${videoInfo.videoDetails.title}`, { force: true, recursive: true })
+        await sendText('Server has cleared files from disk!')
+      } catch (error) {
+        isDownloading = false
+        console.error('Error occurred during the workflow:', error)
+        await sendText(`An error occurred: ${error.message}`)
+      } finally {
+        isDownloading = false
       }
     }
   } else {
-    await sendText(senderPsid, 'Action Not allowed please enter a valid url')
+    await sendText('Action not allowed. Please enter a valid URL.')
   }
 
   return response.status(200).send('EVENT_RECEIVED')
@@ -173,3 +162,28 @@ router.get('/webhook', async ({ request, response }) => {
 
   return response.status(404).send('Not Found')
 })
+
+// Embeder function with retries
+const embederFunc = async (chunk: string, info: videoInfo): Promise<string | null> => {
+  let retries = 3
+  while (retries > 0) {
+    try {
+      const embedPath = await embed(
+        `${path}/videos/${info.videoDetails.title}/${chunk}`,
+        `${path}/videos/${info.videoDetails.title}`,
+        `${path}/files/cover.png`
+      )
+      return embedPath // Return the path once successful
+    } catch (error) {
+      retries -= 1
+      console.log(`Error on embed function, retries left: ${retries}`)
+      await delay(2)
+
+      if (retries === 0) {
+        throw new Error('Failed to embed file, please debug.')
+      }
+    }
+  }
+
+  return null // Return null if all retries fail
+}

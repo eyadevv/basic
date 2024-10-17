@@ -6,6 +6,7 @@ import { promisify } from 'node:util'
 const execPromise = promisify(exec)
 
 export default async function clipper(VideoPath: string) {
+  console.log('Started Splitting')
   const arr = VideoPath.split('/')
   const filename = arr[arr.length - 1]
   const dir = `${filename.slice(0, filename.lastIndexOf('.'))}`
@@ -19,7 +20,7 @@ export default async function clipper(VideoPath: string) {
   })
 
   // Command to split the video using the shell script
-  const command = `"${import.meta.dirname}/split.sh" "${VideoPath}" "${output}" 15000000 "-c:v libx264 -crf 23 -c:a copy -vf scale=960:-1"`
+  const command = `"${import.meta.dirname}/split.sh" "${VideoPath}" "${output}" 15000000 "-c:a copy"`
 
   try {
     // Wait for the exec command to complete using a Promise

@@ -64,6 +64,7 @@
     "env": "link:@adonisjs/core/env",
     "fbm-send": "^2.0.5",
     "form-data": "^4.0.1",
+    "http-proxy-agent": "^7.0.2",
     "playwright": "^1.48.0",
     "progress": "^2.0.3",
     "reflect-metadata": "^0.2.2",
