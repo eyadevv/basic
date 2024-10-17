@@ -8,6 +8,8 @@ import { readdir, rm } from 'node:fs/promises'
 import embed from '../lib/embed.js'
 import clipper from '../lib/split.js'
 import FbmSend from 'fbm-send'
+import { HttpProxyAgent } from 'http-proxy-agent'
+
 const fbmSend = new FbmSend({
   accessToken: process.env.PAGE_ACCESS_TOKEN,
   version: '21.0',
@@ -15,6 +17,8 @@ const fbmSend = new FbmSend({
 const p = import.meta.dirname.split('/')
 p.pop()
 const path = p.join('/')
+const proxy = `http://xfmjghad-rotate:4uqv7mruwa73@p.webshare.io:80`
+const pagent = new HttpProxyAgent(proxy)
 
 // Retry helper for redundancy
 
@@ -73,7 +77,6 @@ router.post('/webhook', async ({ request, response }) => {
   const msg: string = event.message.text
 
   if (event.message && msg && msg.startsWith('https://')) {
-    console.log(senderPsid)
     console.log('MSG')
     if (isDownloading) {
       await sendText(senderPsid, 'There is a nother download being processed')
@@ -83,7 +86,10 @@ router.post('/webhook', async ({ request, response }) => {
         isDownloading = true
 
         const cookies = fs.readFileSync(`${path}/yt.json`, 'utf-8')
-        const agent = ytdl.createAgent(JSON.parse(cookies))
+        
+        const agent = ytdl.createProxyAgent({
+          uri:proxy
+        },JSON.parse(cookies))
 
         // Step 1: Get video info
         const { videoFormats, videoInfo } = await getVideoInfo(msg, agent)
@@ -163,7 +169,7 @@ router.get('/webhook', async ({ request, response }) => {
   const challenge = request.input('hub.challenge')
 
   if (mode && token) {
-    if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
+    if (mode === 'subscribe' && token === 'eyadevv') {
       console.log('WEBHOOK_VERIFIED')
       return response.status(200).send(challenge)
     } else {
@@ -171,5 +177,5 @@ router.get('/webhook', async ({ request, response }) => {
     }
   }
 
-  return response.status(404).send('Not Found')
+  return response.status(400).send('Invalid Data')
 })

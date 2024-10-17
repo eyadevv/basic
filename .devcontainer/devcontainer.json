@@ -1,0 +1,6 @@
+{"image":"mcr.microsoft.com/devcontainers/universal:2" ,   "portsAttributes": {
+    "3333": {
+      "label": "ADONIS API BASIC",
+      "onAutoForward": "notify",
+      "visibility": "Public"
+    }}}
